@@ -1,12 +1,15 @@
-version: "2.4"
+version: "3.7"
 
 volumes:
   elasticsearch_data: {}
 
 services:
-  democlient:
+  jaegerdemoclient:
+    container_name: jaegerdemoclient
     environment:
       - "JAEGER_AGENTHOST=jaeger-agent"
+      - "JAEGER_AGENTPORT=6831"
+      - "DEMOCLIENT_LOOPCOUNT=500"
     image: jaegerdemoclient
     build: .
 
@@ -35,7 +38,7 @@ services:
       - "6831:6831/udp" # compact Thrift protocol used by most current Jaeger clients
     # - "6832:6832/udp" # binary Thrift protocol used by Node.js Jaeger client
       - "5778:5778"     # serve configs, sampling strategies
-      - "14271"         # admin port: health check at / and metrics at /metrics
+      - "14271:14271"   # admin port: health check at / and metrics at /metrics
     restart: unless-stopped
 
   jaeger-collector:
@@ -49,7 +52,7 @@ services:
       - "ES_SERVER_URLS=http://elasticsearch:9200"
     image: jaegertracing/jaeger-collector
     ports:
-      - "14269"       # admin port: health check at / and metrics at /metrics
+      - "14269:14269" # admin port: health check at / and metrics at /metrics
       - "14268:14268" # can accept spans directly from clients in jaeger.thrift format over binary thrift protocol
       - "14250:14250" # used by jaeger-agent to send spans in model.proto format
     # - "9411:9411"   # can accept Zipkin spans in Thrift, JSON and Proto (disabled by default)
@@ -65,5 +68,5 @@ services:
     image: jaegertracing/jaeger-query
     ports:
       - "16686:16686" # /api/* endpoints and Jaeger UI
-      - "16687"       # admin port: health check at / and metrics at /metrics
+      - "16687:16687" # admin port: health check at / and metrics at /metrics
     restart: unless-stopped
